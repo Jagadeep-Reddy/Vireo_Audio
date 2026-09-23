@@ -104,6 +104,7 @@ export OPENAI_API_KEY="your-key-here"
 │   └── index.html              # Sleek, interactive dashboard template
 ├── requirements.txt            # Minimal dependencies (flask, pandas, numpy)
 ├── memo-to-priya.md            # 1-Page non-technical executive memo for Priya Raman
+├── submission-form.md          # Completed submission form with quantified ROI, failure modes & audit
 ├── tickets.csv                 # Raw dataset: 18 months of tickets
 ├── agents.csv                  # Roster data
 ├── orders.csv                  # Orders & lot codes
