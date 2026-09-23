@@ -169,26 +169,38 @@
       loadLeaderboard();
     }
     async function loadLeaderboard() {
-      const w = document.getElementById('weekSel').value;
-      const t = document.getElementById('tierSel').value;
-      const res = await fetch(`/api/leaderboard?week=${w}&tier=${t}`);
-      const rows = await res.json();
-      document.getElementById('lbBody').innerHTML = rows.map(r => `
-        <tr>
-          <td><strong>#${r.rank}</strong></td><td>${r.name}</td><td>${r.site} • ${r.shift}</td>
-          <td><span class="badge ${r.tier === 2 ? 'badge-warning' : 'badge-primary'}">T${r.tier}</span> ${r.team}</td>
-          <td><strong>${r.closed}</strong></td><td>${r.handle_hrs ? r.handle_hrs + 'h' : '--'}</td>
-          <td><span class="badge ${r.avg_csat >= 3.5 ? 'badge-success' : 'badge-warning'}">${r.avg_csat ? r.avg_csat + ' ★' : '--'}</span></td>
-          <td>${r.low_effort_pct > 20 ? `<span class="badge badge-danger">${r.low_effort_pct}% low</span>` : r.low_effort_pct + '%'}</td>
-          <td>${r.fcr_pct}%</td>
-        </tr>
-      `).join('');
+      try {
+        const w = document.getElementById('weekSel').value;
+        const t = document.getElementById('tierSel').value;
+        const res = await fetch(`/api/leaderboard?week=${w}&tier=${t}`);
+        const rows = await res.json();
+        if (!rows || rows.length === 0) {
+          document.getElementById('lbBody').innerHTML = '<tr><td colspan="9" style="text-align:center; padding:1.5rem; color:var(--muted);">No agent records found for this selection.</td></tr>';
+          return;
+        }
+        document.getElementById('lbBody').innerHTML = rows.map(r => `
+          <tr>
+            <td><strong>#${r.rank}</strong></td><td>${r.name}</td><td>${r.site} • ${r.shift}</td>
+            <td><span class="badge ${r.tier === 2 ? 'badge-warning' : 'badge-primary'}">T${r.tier}</span> ${r.team}</td>
+            <td><strong>${r.closed}</strong></td><td>${r.handle_hrs != null ? r.handle_hrs + 'h' : '--'}</td>
+            <td><span class="badge ${r.avg_csat >= 3.5 ? 'badge-success' : 'badge-warning'}">${r.avg_csat != null ? r.avg_csat + ' ★' : '--'}</span></td>
+            <td>${r.low_effort_pct > 20 ? `<span class="badge badge-danger">${r.low_effort_pct}% low</span>` : r.low_effort_pct + '%'}</td>
+            <td>${r.fcr_pct}%</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error("Leaderboard load error:", err);
+      }
     }
     async function loadLeakage() {
-      const res = await fetch('/api/leakage');
-      const data = await res.json();
-      document.getElementById('dipsBody').innerHTML = data.double_dips.map(d => `<tr><td><strong>${d.ticket_id}</strong></td><td>${d.order_id}</td><td>${d.customer_id}</td><td style="color:#f87171;">Rs ${d.refund_amount_inr}</td><td><span class="badge badge-danger">Y (Shipped)</span></td><td style="color:var(--muted);">Refund + Repl. given</td></tr>`).join('');
-      document.getElementById('gwBody').innerHTML = data.goodwill.slice(0, 8).map(g => `<tr><td><strong>${g.ticket_id}</strong></td><td>${g.customer_id}</td><td>${g.refund_reason_code}</td><td style="color:#f87171;">Rs ${g.refund_amount_inr}</td><td>${g.assigned_team}</td><td><span class="badge badge-danger">+Rs ${(g.refund_amount_inr - 500).toLocaleString()}</span></td></tr>`).join('');
+      try {
+        const res = await fetch('/api/leakage');
+        const data = await res.json();
+        document.getElementById('dipsBody').innerHTML = data.double_dips.map(d => `<tr><td><strong>${d.ticket_id}</strong></td><td>${d.order_id}</td><td>${d.customer_id}</td><td style="color:#f87171;">Rs ${d.refund_amount_inr}</td><td><span class="badge badge-danger">Y (Shipped)</span></td><td style="color:var(--muted);">Refund + Repl. given</td></tr>`).join('');
+        document.getElementById('gwBody').innerHTML = data.goodwill.slice(0, 8).map(g => `<tr><td><strong>${g.ticket_id}</strong></td><td>${g.customer_id}</td><td>${g.refund_reason_code}</td><td style="color:#f87171;">Rs ${g.refund_amount_inr}</td><td>${g.assigned_team}</td><td><span class="badge badge-danger">+Rs ${(g.refund_amount_inr - 500).toLocaleString()}</span></td></tr>`).join('');
+      } catch (err) {
+        console.error("Leakage load error:", err);
+      }
     }
     function calcROI() {
       const val = parseFloat(document.getElementById('roiSlider').value);
@@ -202,6 +214,8 @@
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
       document.getElementById('tab-' + id).classList.add('active');
       btn.classList.add('active');
+      if (id === 'leaderboard') loadLeaderboard();
+      if (id === 'leakage') loadLeakage();
     }
     window.onload = init;
   </script>

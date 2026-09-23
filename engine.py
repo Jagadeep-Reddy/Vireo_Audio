@@ -130,18 +130,21 @@ def get_leaderboard(tickets: pd.DataFrame, agents: pd.DataFrame, week: str = Non
 
     roster = agents[['agent_id', 'name', 'site', 'team', 'shift', 'tier']].merge(agent_grp, on='agent_id', how='left')
     roster['closed'] = roster['closed'].fillna(0).astype(int)
+    roster['low_notes'] = roster['low_notes'].fillna(0).astype(int)
+    roster['repeats'] = roster['repeats'].fillna(0).astype(int)
     roster['low_effort_pct'] = np.where(roster['closed'] > 0, (roster['low_notes'] / roster['closed'] * 100).round(1), 0.0)
     roster['fcr_pct'] = np.where(roster['closed'] > 0, ((roster['closed'] - roster['repeats']) / roster['closed'] * 100).round(1), 0.0)
     roster['avg_csat'] = roster['avg_csat'].round(2)
     roster['handle_hrs'] = roster['handle_hrs'].round(1)
 
-    if tier:
+    if tier and str(tier).strip():
         roster = roster[roster['tier'] == int(tier)]
-    if team:
+    if team and str(team).strip():
         roster = roster[roster['team'] == team]
 
     roster = roster.sort_values(['closed', 'avg_csat'], ascending=[False, False]).reset_index(drop=True)
     roster['rank'] = roster.index + 1
+    roster = roster.replace({np.nan: None})
     return roster
 
 

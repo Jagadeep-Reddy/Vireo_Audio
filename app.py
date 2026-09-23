@@ -5,6 +5,7 @@ Serves at: http://127.0.0.1:5000
 """
 
 import os
+import math
 from flask import Flask, jsonify, request, render_template
 from engine import load_and_clean_data, get_weekly_kpis, get_leaderboard, generate_digest
 
@@ -39,7 +40,12 @@ def api_leaderboard():
     tier = request.args.get("tier")
     team = request.args.get("team")
     lb = get_leaderboard(TICKETS, AGENTS, week=week, tier=tier, team=team)
-    return jsonify(lb.to_dict(orient="records"))
+    records = lb.to_dict(orient="records")
+    for r in records:
+        for k, v in r.items():
+            if isinstance(v, float) and (math.isnan(v) or math.isinf(v)):
+                r[k] = None
+    return jsonify(records)
 
 
 @app.route("/api/leakage")
